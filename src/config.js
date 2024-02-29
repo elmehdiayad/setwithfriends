@@ -3,24 +3,27 @@
 const config = {
   development: {
     firebase: {
-      apiKey: "AIzaSyB6jICg__HEdtZRcSoIoeUMau41jvKNwvU",
-      authDomain: "setwithfriends-dev.web.app",
-      databaseURL: "https://setwithfriends-dev.firebaseio.com",
-      projectId: "setwithfriends-dev",
-      appId: "1:369319422608:web:b9038b38a1bd598048c615",
+      apiKey: "AIzaSyCqQ8LbQ9CY5ZpBXMof5PrWNXvA_PTSkgs",
+      authDomain: "cuema-a3a53.firebaseapp.com",
+      projectId: "cuema-a3a53",
+      databaseURL: "https://cuema-a3a53-default-rtdb.firebaseio.com",
+      storageBucket: "cuema-a3a53.appspot.com",
+      messagingSenderId: "1088376207295",
+      appId: "1:1088376207295:web:e5ea70a729b2f25d61130a",
+      measurementId: "G-2E7JWL7CE5"
     },
     stripe: null, // Stripe not supported in development
   },
   preview: {
     firebase: {
-      apiKey: "AIzaSyB6jICg__HEdtZRcSoIoeUMau41jvKNwvU",
-      authDomain: "setwithfriends-dev.web.app",
-      databaseURL: "https://setwithfriends-dev.firebaseio.com",
-      projectId: "setwithfriends-dev",
-      storageBucket: "setwithfriends-dev.appspot.com",
-      messagingSenderId: "369319422608",
-      appId: "1:369319422608:web:b9038b38a1bd598048c615",
-      measurementId: "G-GN0204W8F7",
+      apiKey: "AIzaSyCqQ8LbQ9CY5ZpBXMof5PrWNXvA_PTSkgs",
+      authDomain: "cuema-a3a53.firebaseapp.com",
+      projectId: "cuema-a3a53",
+      databaseURL: "https://cuema-a3a53-default-rtdb.firebaseio.com",
+      storageBucket: "cuema-a3a53.appspot.com",
+      messagingSenderId: "1088376207295",
+      appId: "1:1088376207295:web:e5ea70a729b2f25d61130a",
+      measurementId: "G-2E7JWL7CE5"
     },
     stripe: {
       publishableKey:
@@ -30,14 +33,14 @@ const config = {
   },
   production: {
     firebase: {
-      apiKey: "AIzaSyCeKQ4rauZ_fq1rEIPJ8m5XfppwjtmTZBY",
-      authDomain: "setwithfriends.com",
-      databaseURL: "https://setwithfriends.firebaseio.com",
-      projectId: "setwithfriends",
-      storageBucket: "setwithfriends.appspot.com",
-      messagingSenderId: "970544876139",
-      appId: "1:970544876139:web:06295fe4079007f76abf2e",
-      measurementId: "G-QDX193SN7R",
+      apiKey: "AIzaSyCqQ8LbQ9CY5ZpBXMof5PrWNXvA_PTSkgs",
+      authDomain: "cuema-a3a53.firebaseapp.com",
+      databaseURL: "https://cuema-a3a53-default-rtdb.firebaseio.com",
+      projectId: "cuema-a3a53",
+      storageBucket: "cuema-a3a53.appspot.com",
+      messagingSenderId: "1088376207295",
+      appId: "1:1088376207295:web:e5ea70a729b2f25d61130a",
+      measurementId: "G-2E7JWL7CE5"
     },
     stripe: {
       publishableKey:

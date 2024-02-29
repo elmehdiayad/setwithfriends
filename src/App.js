@@ -51,6 +51,7 @@ function App() {
           .auth()
           .signInAnonymously()
           .catch((error) => {
+            console.log(error.code, error.message);
             alert("Unable to connect to the server. Please try again later.");
           });
       }

@@ -11,7 +11,7 @@ const scripts = [listAdmins, listPatrons, sanitizeNames, fixGames, calcStats];
 
 admin.initializeApp({
   credential: admin.credential.cert("./credential.json"),
-  databaseURL: "https://setwithfriends.firebaseio.com",
+  databaseURL: "https://cuema-a3a53-default-rtdb.firebaseio.com",
 });
 
 async function main() {

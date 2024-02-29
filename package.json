@@ -42,7 +42,8 @@
     "build": "cross-env REACT_APP_ENV=production react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "postinstall": "cd functions && npm install"
   },
   "browserslist": [
     ">0.2%",

@@ -61,9 +61,9 @@ app.stdout.pipe(process.stdout);
 
 const pubsub = new PubSub({
   apiEndpoint: "localhost:8085",
-  projectId: "setwithfriends-dev",
+  projectId: "cuema-a3a53",
 });
 
 setInterval(async () => {
-  await pubsub.topic("firebase-schedule-clearConnections").publishJSON({});
+  await pubsub.topic("projects/cuema-a3a53/topics/cue").publishJSON({});
 }, 60 * 1000); // every minute
