@@ -6,16 +6,6 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import { makeStyles } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
-import StarIcon from "@material-ui/icons/Star";
-import amber from "@material-ui/core/colors/amber";
-import grey from "@material-ui/core/colors/grey";
-import { useTheme } from "@material-ui/core/styles";
-
-import ElapsedTime from "./ElapsedTime";
-import User from "./User";
-import Loading from "./Loading";
-import { formatTime, colors, modes } from "../util";
 
 const useStyles = makeStyles((theme) => ({
   gamesTable: {
@@ -52,20 +42,9 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function ProfileGamesTable({ userId, gamesData, handleClickGame }) {
+function ProfileGamesTable({ userId, handleClickGame }) {
   const classes = useStyles();
-  const theme = useTheme();
 
-  if (!gamesData) {
-    return <Loading />;
-  }
-  if (Object.keys(gamesData).length === 0) {
-    return (
-      <Typography style={{ color: grey[400] }}>
-        No recent games to display...
-      </Typography>
-    );
-  }
   return (
     <TableContainer component={Paper} className={classes.gamesTable}>
       <Table size="small" stickyHeader>
@@ -82,43 +61,7 @@ function ProfileGamesTable({ userId, gamesData, handleClickGame }) {
             <TableCell>Won</TableCell>
           </TableRow>
         </TableHead>
-        <TableBody>
-          {Object.entries(gamesData)
-            .sort(([, g1], [, g2]) => g2.createdAt - g1.createdAt)
-            .map(([gameId, game]) => {
-              const modeInfo = modes[game.mode || "normal"];
-              return (
-                <TableRow key={gameId} onClick={() => handleClickGame(gameId)}>
-                  <TableCell>
-                    <User id={game.host} />
-                  </TableCell>
-                  <TableCell>{Object.keys(game.users).length}</TableCell>
-                  <TableCell
-                    style={{
-                      color:
-                        colors[modeInfo.color][
-                          theme.palette.type === "dark" ? 100 : 900
-                        ],
-                    }}
-                  >
-                    {modeInfo.name}
-                  </TableCell>
-                  <TableCell>{game.scores[userId] || 0}</TableCell>
-                  <TableCell>
-                    {formatTime(game.endedAt - game.startedAt)}
-                  </TableCell>
-                  <TableCell className={classes.vanishingTableCell}>
-                    <ElapsedTime value={game.createdAt} />
-                  </TableCell>
-                  <TableCell>
-                    {game.scores[userId] === game.topScore && (
-                      <StarIcon style={{ color: amber[500] }} />
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-        </TableBody>
+        <TableBody></TableBody>
       </Table>
     </TableContainer>
   );

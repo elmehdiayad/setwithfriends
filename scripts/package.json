@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "repository": "https://github.com/ekzhang/setwithfriends",
   "license": "MIT",
-  "description": "Internal scripts for Set with Friends.",
+  "description": "Internal scripts for Cue.ma.",
   "main": "src/index.ts",
   "scripts": {
     "start": "node -r esm src/index.js"

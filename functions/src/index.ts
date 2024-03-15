@@ -1,22 +1,19 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-admin.initializeApp();
 
 import Stripe from "stripe";
+
+import { GameMode } from "./game";
+admin.initializeApp();
 const stripe = process.env.FUNCTIONS_EMULATOR
   ? (null as any)
   : new Stripe(functions.config().stripe.secret, {
-      apiVersion: "2020-08-27",
-    });
-
-import { generateDeck, replayEvents, findSet, GameMode } from "./game";
+    apiVersion: "2020-08-27",
+  });
 
 const MAX_GAME_ID_LENGTH = 64;
 const MAX_UNFINISHED_GAMES_PER_HOUR = 4;
 
-// Rating system parameters.
-const SCALING_FACTOR = 800;
-const BASE_RATING = 1200;
 
 type TransactionResult = {
   committed: boolean;
@@ -25,7 +22,7 @@ type TransactionResult = {
 
 /** Ends the game with the correct time and updates ratings */
 export const finishGame = functions.https.onCall(async (data, context) => {
-  const gameId = data.gameId;
+  const { gameId } = data;
   if (
     !(typeof gameId === "string") ||
     gameId.length === 0 ||
@@ -34,7 +31,7 @@ export const finishGame = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError(
       "invalid-argument",
       "The function must be called with " +
-        "argument `gameId` to be finished at `/games/:gameId`."
+      "argument `gameId` to be finished at `/games/:gameId`."
     );
   }
   if (!context.auth) {
@@ -44,10 +41,7 @@ export const finishGame = functions.https.onCall(async (data, context) => {
     );
   }
 
-  const gameData = await admin
-    .database()
-    .ref(`gameData/${gameId}`)
-    .once("value");
+
   const gameSnap = await admin.database().ref(`games/${gameId}`).once("value");
   if (!gameSnap.exists()) {
     throw new functions.https.HttpsError(
@@ -58,14 +52,8 @@ export const finishGame = functions.https.onCall(async (data, context) => {
 
   const gameMode = (gameSnap.child("mode").val() as GameMode) || "normal";
 
-  const { lastSet, deck, finalTime, scores } = replayEvents(gameData, gameMode);
-
-  if (findSet(Array.from(deck), gameMode, lastSet)) {
-    throw new functions.https.HttpsError(
-      "failed-precondition",
-      "The requested game has not yet ended."
-    );
-  }
+  const scores = gameSnap.child("users").val() || {};
+  const finalTime = Date.now();
 
   // The game has ended, so we attempt to do an atomic update.
   // Safety: Events can only be appended to the game, so the final time must remain the same.
@@ -73,26 +61,22 @@ export const finishGame = functions.https.onCall(async (data, context) => {
     .database()
     .ref(`games/${gameId}`)
     .transaction((game) => {
-      if (game.status !== "ingame") {
-        // Someone beat us to the atomic update, so we cancel the transaction.
-        return;
+      if (game) {
+
+        if (game.status !== "ingame") {
+          // Someone beat us to the atomic update, so we cancel the transaction.
+          return;
+        }
+        game.status = "done";
+        game.endedAt = admin.database.ServerValue.TIMESTAMP;
       }
-      game.status = "done";
-      game.endedAt = finalTime;
       return game;
+    }).catch((error) => {
+      console.error("Transaction failed abnormally:", error);
+      return { committed: false, snapshot: null };
     });
 
   if (!committed) {
-    return;
-  }
-
-  // Check if hints are enabled; and if so, ignore the game in statistics
-  if (
-    snapshot.child("enableHint").val() &&
-    snapshot.child("users").numChildren() === 1 &&
-    snapshot.child("access").val() === "private" &&
-    gameMode === "normal"
-  ) {
     return;
   }
 
@@ -115,9 +99,8 @@ export const finishGame = functions.https.onCall(async (data, context) => {
   }
 
   // Differentiate between solo and multiplayer games.
-  const variant = players.length === 1 ? "solo" : "multiplayer";
   const time = finalTime - gameSnap.child("startedAt").val();
-  const topScore = Math.max(...Object.values(scores));
+  const topScore = Math.max(...Object.values(scores) as number[]);
 
   // Update statistics for all users
   const userStats: Record<string, any> = {};
@@ -125,7 +108,7 @@ export const finishGame = functions.https.onCall(async (data, context) => {
     players.map(async (player) => {
       const result: TransactionResult = await admin
         .database()
-        .ref(`userStats/${player}/${gameMode}/${variant}`)
+        .ref(`userStats/${player}/${gameMode}`)
         .transaction((stats) => {
           stats ??= {}; // tslint:disable-line no-parameter-reassignment
           stats.finishedGames = (stats.finishedGames ?? 0) + 1;
@@ -142,56 +125,6 @@ export const finishGame = functions.https.onCall(async (data, context) => {
     })
   );
 
-  // If the game is solo, we skip rating calculation.
-  if (variant === "solo") {
-    return;
-  }
-
-  // Retrieve old ratings from the database.
-  const ratings: Record<string, number> = {};
-  for (const player of players) {
-    const ratingSnap = await admin
-      .database()
-      .ref(`userStats/${player}/${gameMode}/rating`)
-      .once("value");
-    const rating = ratingSnap.exists() ? ratingSnap.val() : BASE_RATING;
-    ratings[player] = rating;
-  }
-
-  // Compute expected ratio for each player.
-  const likelihood: Record<string, number> = {};
-  let totalLikelihood = 0;
-  for (const player of players) {
-    likelihood[player] = Math.pow(10, ratings[player] / SCALING_FACTOR);
-    totalLikelihood += likelihood[player];
-  }
-
-  // Compute achieved ratio for each player.
-  const achievedRatio: Record<string, number> = {};
-  const setCount = Object.values(scores).reduce((a, b) => a + b);
-  for (const player of players) {
-    achievedRatio[player] = scores[player] / setCount;
-  }
-
-  // Compute new rating for each player.
-  const updates: Record<string, number> = {};
-  for (const player of players) {
-    /**
-     * Adapt the learning rate to the experience of a player and the
-     * corresponding certainty of the rating system based on the number of
-     * games played.
-     */
-    const gameCount = userStats[player].finishedGames as number;
-    const learningRate = Math.max(256 / (1 + gameCount / 20), 64);
-
-    const newRating =
-      ratings[player] +
-      learningRate *
-        (achievedRatio[player] - likelihood[player] / totalLikelihood);
-
-    updates[`${player}/${gameMode}/rating`] = newRating;
-  }
-  await admin.database().ref("userStats").update(updates);
 });
 
 /** Create a new game in the database */
@@ -199,7 +132,7 @@ export const createGame = functions.https.onCall(async (data, context) => {
   const gameId = data.gameId;
   const access = data.access || "public";
   const mode = data.mode || "normal";
-  const enableHint = data.enableHint || false;
+  const numberOfMatches = data.numberOfMatches || 3;
 
   if (
     !(typeof gameId === "string") ||
@@ -209,7 +142,7 @@ export const createGame = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError(
       "invalid-argument",
       "The function must be called with " +
-        "argument `gameId` to be created at `/games/:gameId`."
+      "argument `gameId` to be created at `/games/:gameId`."
     );
   }
   if (
@@ -219,7 +152,7 @@ export const createGame = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError(
       "invalid-argument",
       "The function must be called with " +
-        'argument `access` given value "public" or "private".'
+      'argument `access` given value "public" or "private".'
     );
   }
   if (!context.auth) {
@@ -274,7 +207,7 @@ export const createGame = functions.https.onCall(async (data, context) => {
         status: "waiting",
         access,
         mode,
-        enableHint,
+        numberOfMatches,
       };
     } else {
       return;
@@ -289,15 +222,10 @@ export const createGame = functions.https.onCall(async (data, context) => {
 
   // After this point, the game has successfully been created.
   // We update the database asynchronously in three different places:
-  //   1. /gameData/:gameId
-  //   2. /stats/gameCount
-  //   3. /publicGames (if access is public)
+  //   1. /stats/gameCount
+  //   2. /publicGames (if access is public)
   const updates: Array<Promise<any>> = [];
-  updates.push(
-    admin.database().ref(`gameData/${gameId}`).set({
-      deck: generateDeck(),
-    })
-  );
+
   updates.push(
     admin
       .database()

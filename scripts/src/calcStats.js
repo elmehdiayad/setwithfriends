@@ -36,11 +36,9 @@ export async function calcStats() {
         }
 
         const stats = {};
-        for (const mode of ["normal", "setchain", "ultraset"]) {
+        for (const mode of ["normal", "supreme", "black"]) {
           stats[mode] = {};
-          for (const variant of ["solo", "multiplayer"]) {
-            stats[mode][variant] = {};
-          }
+          
         }
 
         await Promise.all(
@@ -64,7 +62,6 @@ export async function calcStats() {
 
             // Check if hints are enabled; and if so, ignore the game in statistics
             if (
-              game.child("enableHint").val() &&
               game.child("users").numChildren() === 1 &&
               game.child("access").val() === "private" &&
               gameMode === "normal"

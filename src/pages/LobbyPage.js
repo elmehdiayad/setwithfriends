@@ -9,7 +9,6 @@ import Typography from "@material-ui/core/Typography";
 import Grid from "@material-ui/core/Grid";
 import Button from "@material-ui/core/Button";
 import Box from "@material-ui/core/Box";
-import Link from "@material-ui/core/Link";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
 import Table from "@material-ui/core/Table";
@@ -301,11 +300,7 @@ function LobbyPage() {
         <InternalLink to="/help">Help</InternalLink> •{" "}
         <InternalLink to="/about">About</InternalLink> •{" "}
         <InternalLink to="/conduct">Conduct</InternalLink> •{" "}
-        <InternalLink to="/donate">Donate</InternalLink> •{" "}
-        <InternalLink to="/legal">Legal</InternalLink> •{" "}
-        <Link target="_blank" rel="noopener" href="https://discord.gg/XbjJyc9">
-          Discord
-        </Link>
+        <InternalLink to="/legal">Legal</InternalLink>
       </Typography>
     </Container>
   );

@@ -61,7 +61,6 @@ function Chat({
   messageLimit,
   showMessageTimes,
   gameId,
-  history,
   gameMode,
   startedAt,
 }) {
@@ -149,11 +148,6 @@ function Chat({
   };
 
   const items = messages;
-  if (gameId && history) {
-    for (let i = 0; i < history.length; i++) {
-      items[`card@${i}`] = history[i];
-    }
-  }
 
   const timeTooltip = (time, elem) => {
     if (!showMessageTimes) {

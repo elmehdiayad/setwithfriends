@@ -55,7 +55,7 @@ function DonatePage() {
           Friends.
         </Typography>
         <Typography variant="body1" gutterBottom>
-          <em>Set with Friends</em> is an online, real-time multiplayer card
+          <em>Cue.ma</em> is an online, real-time multiplayer card
           game. It's <strong>free, forever, for everyone</strong>. We want to
           make it as easy as possible to have fun playing Set online{" "}
           {!loadingGameCount && (

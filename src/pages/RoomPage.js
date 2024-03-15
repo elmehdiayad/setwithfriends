@@ -60,7 +60,6 @@ function RoomPage({ match, location }) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [game, loadingGame] = useFirebaseRef(`games/${gameId}`);
-
   useEffect(() => {
     if (
       !leaving &&
@@ -69,17 +68,31 @@ function RoomPage({ match, location }) {
       (!game.users || !(user.id in game.users))
     ) {
       const updates = {
-        [`games/${gameId}/users/${user.id}`]:
-          firebase.database.ServerValue.TIMESTAMP,
+        [`games/${gameId}/users/${user.id}`]: 0,
         [`userGames/${user.id}/${gameId}`]: game.createdAt,
       };
+
       firebase
         .database()
-        .ref()
-        .update(updates)
-        .then(() => firebase.analytics().logEvent("join_game", { gameId }))
-        .catch((reason) => {
-          console.warn(`Failed to join game (${reason})`);
+        .ref(`games/${gameId}/users`)
+        .once("value", (snapshot) => {
+          const users = snapshot.val();
+          if (users && Object.keys(users).length >= 2) {
+            console.warn("Game is full");
+          } else {
+            // Add user to game
+
+            firebase
+              .database()
+              .ref()
+              .update(updates)
+              .then(() =>
+                firebase.analytics().logEvent("join_game", { gameId })
+              )
+              .catch((reason) => {
+                console.warn(`Failed to join game (${reason})`);
+              });
+          }
         });
     }
   }, [user.id, game, gameId, leaving]);

@@ -5,8 +5,6 @@ import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement } from "chart.js";
 
-import { formatTime } from "../util";
-
 ChartJS.register(ArcElement);
 
 const useStyles = makeStyles((theme) => ({
@@ -24,11 +22,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function UserStatistics({ stats, variant }) {
+function UserStatistics({ stats }) {
   const classes = useStyles();
   const theme = useTheme();
 
-  const num = stats[variant];
+  const num = stats;
 
   const pieData = {
     datasets: [
@@ -83,27 +81,13 @@ function UserStatistics({ stats, variant }) {
           Finished games: <strong>{num.finishedGames}</strong>
         </Typography>
         <Typography variant="body2" className={classes.statsItem}>
-          Total sets: <strong>{num.totalSets}</strong>
+          Won games: <strong>{num.wonGames}</strong>
         </Typography>
         <Typography variant="body2" className={classes.statsItem}>
-          Average sets per game:{" "}
+          Wining %:{" "}
           <strong>
             {num.finishedGames > 0
-              ? (num.totalSets / num.finishedGames).toFixed(2)
-              : "N/A"}
-          </strong>
-        </Typography>
-        <Typography variant="body2" className={classes.statsItem}>
-          Fastest game won:{" "}
-          <strong>
-            {num.fastestTime !== Infinity ? formatTime(num.fastestTime) : "N/A"}
-          </strong>
-        </Typography>
-        <Typography variant="body2" className={classes.statsItem}>
-          Average game length:{" "}
-          <strong>
-            {num.finishedGames > 0
-              ? formatTime(num.totalTime / num.finishedGames)
+              ? (num.wonGames / num.finishedGames).toFixed(2)
               : "N/A"}
           </strong>
         </Typography>

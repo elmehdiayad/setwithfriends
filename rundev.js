@@ -9,7 +9,7 @@
 
 const path = require("path");
 const { spawn, spawnSync } = require("child_process");
-const { PubSub } = require("@google-cloud/pubsub");
+// const { PubSub } = require("@google-cloud/pubsub");
 
 let build, emulators, app;
 
@@ -59,11 +59,11 @@ app = spawn("npm", ["start"], {
 });
 app.stdout.pipe(process.stdout);
 
-const pubsub = new PubSub({
-  apiEndpoint: "localhost:8085",
-  projectId: "cuema-a3a53",
-});
+// const pubsub = new PubSub({
+//   apiEndpoint: "localhost:8085",
+//   projectId: "cuema-a3a53",
+// });
 
-setInterval(async () => {
-  await pubsub.topic("projects/cuema-a3a53/topics/cue").publishJSON({});
-}, 60 * 1000); // every minute
+// setInterval(async () => {
+//   await pubsub.topic("projects/cuema-a3a53/topics/cue").publishJSON({});
+// }, 60 * 1000); // every minute

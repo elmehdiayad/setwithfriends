@@ -13,17 +13,17 @@
         },
         "users": {
           "$userId": {
-            ".write": "auth != null && auth.uid == $userId && data.parent().parent().child('status').val() == 'waiting'",
-            ".validate": "!newData.exists() || (newData.isNumber() && newData.val() == now)"
+            ".write": "auth != null && auth.uid == $userId ",
+            ".validate": "!newData.exists() || newData.isNumber() && newData.val() >= 0"
           }
         },
         "mode": {
           ".write": "auth != null && auth.uid == data.parent().child('host').val() && newData.exists()",
-          ".validate": "newData.isString()&& (newData.val() == 'normal' || newData.val() == 'ultraset' || newData.val() == 'setchain')"
+          ".validate": "newData.isString()&& (newData.val() == 'normal' || newData.val() == 'supreme' || newData.val() == 'black')"
         },
-        "enableHint": {
+        "numberOfMatches": {
           ".write": "auth != null && auth.uid == data.parent().child('host').val() && newData.exists()",
-          ".validate": "newData.isBoolean()"
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10"
         }
       }
     },

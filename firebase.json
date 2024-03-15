@@ -21,21 +21,21 @@
   },
   "emulators": {
     "auth": {
+      "host": "127.0.0.1",
       "port": 9099
     },
-    "functions": {
-      "port": 5001
-    },
-    "database": {
-      "port": 9000
-    },
+    "functions": { "host": "127.0.0.1", "port": 5001 },
+    "database": { "host": "127.0.0.1", "port": 9002 },
     "hosting": {
+      "host": "127.0.0.1",
       "port": 9001
     },
     "pubsub": {
+      "host": "127.0.0.1",
       "port": 8085
     },
     "ui": {
+      "host": "127.0.0.1",
       "enabled": true,
       "port": 4000
     }

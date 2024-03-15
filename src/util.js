@@ -52,23 +52,27 @@ export const modes = {
   normal: {
     name: "Normal",
     color: "purple",
-    description: "Find 3 cards that form a Set.",
-    setType: "Set",
+    description: "Normal rules.",
+    setType: "normal",
   },
-  setchain: {
-    name: "Set-Chain",
+  supreme: {
+    name: "Supreme",
     color: "teal",
-    description: "In every Set, you have to use 1 card from the previous Set.",
-    setType: "Set",
+    description: "Supreme rules.",
+    setType: "supreme",
   },
-  ultraset: {
-    name: "UltraSet",
+  black: {
+    name: "Black",
     color: "pink",
-    description:
-      "Find 4 cards such that the first pair and the second pair form a Set with the same additional card.",
-    setType: "UltraSet",
+    description: "Black rules.",
+    setType: "black",
   },
 };
+
+export const numberOfMatches = Array.from({ length: 10 }, (_, i) => ({
+  value: i + 1,
+  label: String(i + 1),
+}));
 
 export const standardLayouts = {
   QWERTY: {
@@ -202,121 +206,6 @@ export function generateName() {
   return "Anonymous " + animals[Math.floor(Math.random() * animals.length)];
 }
 
-function hasDuplicates(used, cards) {
-  for (let i = 0; i < cards.length; i++) {
-    for (let j = i + 1; j < cards.length; j++) {
-      if (cards[i] === cards[j]) return true;
-    }
-    if (used[cards[i]]) return true;
-  }
-  return false;
-}
-
-function removeCards(internalGameState, cards) {
-  const { current, used } = internalGameState;
-  let canPreserve = true;
-  for (const c of cards) {
-    if (current.indexOf(c) >= 12) canPreserve = false;
-    used[c] = true;
-  }
-  if (current.length < 12 + cards.length) canPreserve = false;
-
-  if (canPreserve) {
-    // Try to preserve card locations, if possible
-    const d = current.splice(12, cards.length);
-    for (let i = 0; i < cards.length; i++) {
-      current[current.indexOf(cards[i])] = d[i];
-    }
-  } else {
-    // Otherwise, just remove the cards
-    for (const card of cards) {
-      current.splice(current.indexOf(card), 1);
-    }
-  }
-}
-
-function processValidEvent(internalGameState, event, cards) {
-  const { scores, history } = internalGameState;
-  scores[event.user] = (scores[event.user] || 0) + 1;
-  history.push(event);
-  removeCards(internalGameState, cards);
-}
-
-function processEventNormal(internalGameState, event) {
-  const { current, used } = internalGameState;
-  const cards = [event.c1, event.c2, event.c3];
-  if (hasDuplicates(used, cards)) return;
-  processValidEvent(internalGameState, event, cards);
-
-  const minSize = Math.max(internalGameState.boardSize - 3, 12);
-  const boardSize = splitDeck(current, "normal", minSize)[0].length;
-  internalGameState.boardSize = boardSize;
-}
-
-function processEventChain(internalGameState, event) {
-  const { used, history, current } = internalGameState;
-  const { c1, c2, c3 } = event;
-
-  let ok = c1 !== c2 && c2 !== c3 && c1 !== c3 && !used[c2] && !used[c3];
-  if (history.length) {
-    // One card (c1) should be taken from the previous set
-    let prev = history[history.length - 1];
-    ok &&= [prev.c1, prev.c2, prev.c3].includes(c1);
-  } else {
-    ok &&= !used[c1];
-  }
-  if (!ok) return;
-
-  const cards = history.length === 0 ? [c1, c2, c3] : [c2, c3];
-  processValidEvent(internalGameState, event, cards);
-
-  const minSize = Math.max(internalGameState.boardSize - cards.length, 12);
-  const old = [c1, c2, c3];
-  const boardSize = splitDeck(current, "setchain", minSize, old)[0].length;
-  internalGameState.boardSize = boardSize;
-}
-
-function processEventUltra(internalGameState, event) {
-  const { used, current } = internalGameState;
-  const cards = [event.c1, event.c2, event.c3, event.c4];
-  if (hasDuplicates(used, cards)) return;
-  processValidEvent(internalGameState, event, cards);
-
-  const minSize = Math.max(internalGameState.boardSize - 4, 12);
-  const boardSize = splitDeck(current, "ultraset", minSize)[0].length;
-  internalGameState.boardSize = boardSize;
-}
-
-export function computeState(gameData, gameMode = "normal") {
-  const scores = {}; // scores of all users
-  const used = {}; // set of cards that have been taken
-  const history = []; // list of valid events in time order
-  const current = gameData.deck.slice(); // remaining cards in the game
-  const internalGameState = {
-    used,
-    current,
-    scores,
-    history,
-    // Initial deck split
-    boardSize: splitDeck(current, gameMode, 12, [])[0].length,
-  };
-
-  if (gameData.events) {
-    const events = Object.entries(gameData.events)
-      .sort(([k1, e1], [k2, e2]) => {
-        return e1.time !== e2.time ? e1.time - e2.time : k1 < k2;
-      })
-      .map(([_k, e]) => e);
-    for (const event of events) {
-      if (gameMode === "normal") processEventNormal(internalGameState, event);
-      if (gameMode === "setchain") processEventChain(internalGameState, event);
-      if (gameMode === "ultraset") processEventUltra(internalGameState, event);
-    }
-  }
-
-  return { current, scores, history, boardSize: internalGameState.boardSize };
-}
-
 export function formatTime(t, hideSubsecond) {
   t = Math.max(t, 0);
   const hours = Math.floor(t / (3600 * 1000));
@@ -328,7 +217,6 @@ export function formatTime(t, hideSubsecond) {
 /** Returns true if a game actually has hints enabled. */
 export function hasHint(game) {
   return (
-    game.enableHint &&
     game.users &&
     Object.keys(game.users).length === 1 &&
     game.access === "private" &&

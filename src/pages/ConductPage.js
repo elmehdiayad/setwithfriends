@@ -1,5 +1,4 @@
 import Typography from "@material-ui/core/Typography";
-import Link from "@material-ui/core/Link";
 import Container from "@material-ui/core/Container";
 import Paper from "@material-ui/core/Paper";
 
@@ -80,17 +79,6 @@ function ConductPage() {
               this website.
             </li>
           </ul>
-        </Typography>
-        <Typography variant="body1" gutterBottom>
-          Questions? Please join the{" "}
-          <Link
-            target="_blank"
-            rel="noopener"
-            href="https://discord.gg/XbjJyc9"
-          >
-            official Discord server
-          </Link>{" "}
-          and contact a moderator.
         </Typography>
       </Paper>
       <Typography

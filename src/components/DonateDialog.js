@@ -28,10 +28,10 @@ function DonateDialog({ active }) {
   };
   return (
     <Dialog open={active && !recentlyViewed} onClose={handleClose}>
-      <DialogTitle>Support Set with Friends!</DialogTitle>
+      <DialogTitle>Support Cue.ma!</DialogTitle>
       <DialogContent dividers>
         <Typography variant="body1" gutterBottom>
-          Set with Friends is free for everyone. We want to make it as easy as
+          Cue.ma is free for everyone. We want to make it as easy as
           possible to have fun playing Set online, and we don't run ads.
         </Typography>
         <Typography variant="body1" gutterBottom>
@@ -39,7 +39,7 @@ function DonateDialog({ active }) {
             Recently, our site has grown massively in popularity, and server
             costs are getting expensive.
           </strong>{" "}
-          If you enjoy using Set with Friends, please consider donating to help
+          If you enjoy using Cue.ma, please consider donating to help
           keep our site running. Plus, supporters get perks!
         </Typography>
         <Typography variant="body1" gutterBottom component="div">

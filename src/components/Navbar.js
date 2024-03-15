@@ -74,7 +74,7 @@ function Navbar({
       <Toolbar variant="dense">
         <Typography variant="h6" style={{ flexGrow: 1, whiteSpace: "nowrap" }}>
           <InternalLink underline="none" color="inherit" to="/">
-            Set with Friends
+            Cue.ma
           </InternalLink>
         </Typography>
         <Typography

@@ -1,4 +1,6 @@
 import AlarmIcon from "@material-ui/icons/Alarm";
+import AddBox from "@material-ui/icons/AddBox";
+import IndeterminateCheckBox from "@material-ui/icons/IndeterminateCheckBox";
 import Divider from "@material-ui/core/Divider";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
@@ -11,11 +13,14 @@ import { makeStyles } from "@material-ui/core/styles";
 import SportsEsportsIcon from "@material-ui/icons/SportsEsports";
 import SnoozeIcon from "@material-ui/icons/Snooze";
 import { useLocation, Link as RouterLink } from "react-router-dom";
+import firebase, { finishGame } from "../firebase";
 
 import User from "./User";
 import Subheading from "./Subheading";
 import useMoment from "../hooks/useMoment";
 import { formatTime } from "../util";
+import { useState, useContext, useEffect } from "react";
+import { UserContext } from "../context";
 
 const useStyles = makeStyles((theme) => ({
   sidebar: {
@@ -41,12 +46,52 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function GameSidebar({ game, scores, leaderboard }) {
+function GameSidebar({ gameId, game, scores, leaderboard }) {
   const classes = useStyles();
+  const { id: currentUserId } = useContext(UserContext);
   const { pathname } = useLocation();
   const time = useMoment(500);
-
+  const [gameScore, setGameScore] = useState(scores);
+  const numberOfMatches = game.numberOfMatches;
   const gameTime = game.status === "done" ? game.endedAt : time;
+  const handleScore = async (uid, score) => {
+    const currentScore = gameScore[uid] + score;
+    if (currentScore <= numberOfMatches && currentScore >= 0) {
+      firebase
+        .database()
+        .ref(`games/${gameId}/users/${uid}`)
+        .set(currentScore)
+        .then(() => {
+          setGameScore({ ...gameScore, [uid]: currentScore });
+        })
+        .catch((reason) => {
+          console.warn("Error updating score: ", reason);
+        });
+    } else {
+      console.warn("Score cannot surpass the number of matches");
+    }
+    if (currentScore === numberOfMatches) {
+      await finishGame({
+        gameId,
+      });
+    }
+  };
+  useEffect(() => {
+    const db = firebase.database();
+
+    // Replace with the actual path to the game score in your database
+    const gameScoreRef = db.ref(`games/${gameId}/users/`);
+
+    const handleScoreChange = (snapshot) => {
+      const gameScore = snapshot.val();
+      setGameScore(gameScore);
+    };
+
+    gameScoreRef.on("value", handleScoreChange);
+
+    // Clean up the listener when the component unmounts
+    return () => gameScoreRef.off("value", handleScoreChange);
+  }, [gameId]);
 
   return (
     <Paper className={classes.sidebar}>
@@ -73,7 +118,7 @@ function GameSidebar({ game, scores, leaderboard }) {
               variant="body2"
               noWrap
               render={(user, userEl) => (
-                <ListItem button component={RouterLink} to={`/profile/${uid}`}>
+                <ListItem>
                   {game.status === "ingame" && (
                     <ListItemIcon>
                       {user.connections &&
@@ -88,15 +133,35 @@ function GameSidebar({ game, scores, leaderboard }) {
                       )}
                     </ListItemIcon>
                   )}
-                  <ListItemText disableTypography>{userEl}</ListItemText>
                   <ListItemText
+                    button
+                    component={RouterLink}
+                    to={`/profile/${uid}`}
+                  >
+                    {userEl}
+                  </ListItemText>
+                  {uid !== currentUserId && <strong>Score:</strong>}
+                  {uid === currentUserId && (
+                    <IndeterminateCheckBox
+                      button
+                      onClick={() => handleScore(uid, -1)}
+                      htmlColor="dodgerblue"
+                    />
+                  )}
+                  <strong
                     style={{
-                      flex: "0 0 36px",
-                      textAlign: "right",
+                      margin: "0 4px",
                     }}
                   >
-                    <strong>{scores[uid] || 0}</strong>
-                  </ListItemText>
+                    {gameScore[uid] || 0}
+                  </strong>
+                  {uid === currentUserId && (
+                    <AddBox
+                      button
+                      onClick={() => handleScore(uid, 1)}
+                      htmlColor="dodgerblue"
+                    />
+                  )}
                 </ListItem>
               )}
             />
